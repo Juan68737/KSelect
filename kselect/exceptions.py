@@ -228,3 +228,17 @@ class TenantQuotaExceededError(TenantError):
 
 class EvalError(KSelectError):
     """Raised for evaluation or benchmarking failures."""
+
+# ── SPEC-05 canonical name aliases (§18) ─────────────────────────────────────
+# These names are used in the public API and documentation.
+# The underlying classes are the same objects.
+
+KSelectConfigError = ConfigError
+KSelectIndexError = IndexError
+KSelectBackendError = BackendError
+KSelectIngestionError = IngestionError
+KSelectEmbeddingError = EmbeddingError
+KSelectRankingError = RankingError
+KSelectLLMError = LLMError
+KSelectTenantError = TenantError
+KSelectVersionError = IndexLoadError  # raised on version mismatch during load()
