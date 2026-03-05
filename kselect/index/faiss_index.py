@@ -55,11 +55,20 @@ class FAISSIndex:
         embeddings = np.array([c.embedding for c in chunks], dtype="float32")
         faiss.normalize_L2(embeddings)
 
-        if str(config.type) in {
+        needs_train = str(config.type) in {
             str(IndexType.IVF_PQ128),
             str(IndexType.VLQ_ADC),
             str(IndexType.FCVI),
-        }:
+        }
+        if needs_train and len(chunks) < config.nlist:
+            # Not enough vectors to train IVF — rebuild as a flat index instead
+            logger.warning(
+                "FAISSIndex: only %d vectors but nlist=%d; falling back to IndexFlatIP.",
+                len(chunks), config.nlist,
+            )
+            self._index = faiss.IndexFlatIP(dim)
+            self._index_type = str(IndexType.FLAT)
+        elif needs_train:
             self._index.train(embeddings)
 
         self._index.add(embeddings)
