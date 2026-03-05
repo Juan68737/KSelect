@@ -112,7 +112,9 @@ class IndexManager:
     # ── Persistence ───────────────────────────────────────────────────────────
 
     def save(self, path: str) -> None:
-        tmp = path + "/.tmp_ks_save_" + uuid.uuid4().hex
+        parent = os.path.dirname(os.path.abspath(path))
+        os.makedirs(parent, exist_ok=True)
+        tmp = os.path.join(parent, ".tmp_ks_save_" + uuid.uuid4().hex)
         try:
             os.makedirs(tmp, exist_ok=True)
             self._faiss.save(tmp)

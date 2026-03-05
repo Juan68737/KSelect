@@ -32,6 +32,10 @@ class QueryResult(BaseModel):
     context_tokens: int
     max_context_tokens: int
 
+    # Latency breakdown (milliseconds)
+    retrieval_ms: float = 0.0
+    llm_ms: float = 0.0
+
     trace: "QueryTrace | None" = None
 
 

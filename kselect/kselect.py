@@ -138,14 +138,14 @@ class KSelect:
         from kselect.ingestion.loaders import CSVLoader
         from kselect.ingestion.pipeline import IngestionPipeline
 
-        loader = CSVLoader(path, text_col=text_col, metadata_cols=metadata or [])
+        loader = CSVLoader(path, text_col=text_col, metadata=metadata or [])
         pipeline = IngestionPipeline()
 
         state_dir = tempfile.mkdtemp(prefix="kselect_state_")
         backend = LocalBackend(state_dir)
         mgr = _build_manager(backend, cfg)
 
-        chunks = pipeline.run(loader, cfg, vector_col=vector_col)
+        chunks = pipeline.run(loader, cfg)
         mgr.build(chunks)
         return cls(cfg, mgr)
 
@@ -438,6 +438,7 @@ class KSelect:
                 return cached
 
         # Retrieve + rank via search internals (reuse embedding)
+        t_retrieval = time.perf_counter()
         candidates = self._retrieval_engine.retrieve(
             query=query,
             query_embedding=query_embedding,
@@ -455,10 +456,17 @@ class KSelect:
 
         # Assemble context
         context_hits, context_tokens = self._assembler.assemble(hits, ctx_cfg)
+        retrieval_ms = (time.perf_counter() - t_retrieval) * 1000
 
         # LLM call (synchronous wrapper around async generate)
+        t_llm = time.perf_counter()
         answer, confidence = asyncio.run(
             self._llm.generate(query, context_hits, max_tokens=self._config.llm.max_tokens)
+        )
+        llm_ms = (time.perf_counter() - t_llm) * 1000
+        logger.debug(
+            "query latency — retrieval: %.1fms | llm: %.1fms | total: %.1fms",
+            retrieval_ms, llm_ms, (time.perf_counter() - t0) * 1000,
         )
 
         chunk_store = self._index_manager.get_chunk_store()
@@ -483,6 +491,8 @@ class KSelect:
             chunks_dropped=len(hits) - len(context_hits),
             context_tokens=context_tokens,
             max_context_tokens=ctx_cfg.max_context_tokens,
+            retrieval_ms=retrieval_ms,
+            llm_ms=llm_ms,
         )
 
         if self._cache is not None and self._config.cache.enabled:

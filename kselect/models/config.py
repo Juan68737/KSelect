@@ -86,7 +86,7 @@ class ChunkingConfig(BaseModel):
 
 
 class EmbeddingConfig(BaseModel):
-    model: str = "nomic-embed-text-v1.5"
+    model: str = "BAAI/bge-large-en-v1.5"
     api: str | None = None  # "openai" | None (local)
     api_key: str | None = None
     batch_size: int = 256
