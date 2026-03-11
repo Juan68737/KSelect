@@ -14,6 +14,7 @@ pip install -r requirements.txt
 
 **Mac:** CPU mode only. Do not use MPS with large corpora — it will crash.
 **Windows / Linux:** Full GPU support via CUDA.
+**Use Hiper Gator** Only for University of Florida Students
 
 ---
 
